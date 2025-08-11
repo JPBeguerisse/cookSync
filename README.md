@@ -206,12 +206,6 @@ projet-recette-airtable/
 - Cache des requêtes API
 
 
-Membres de l'équipe :
-- Ilyes KABRINE
-- Jean-Pierre BEGUERISSE
-- Ilyesse HAMCHERIF
-
-
 ---
 
 **Développé avec ❤️ pour les passionnés de cuisine**
