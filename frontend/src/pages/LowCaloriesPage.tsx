@@ -26,6 +26,7 @@ import {
   ArrowLongRightIcon,
 } from "@heroicons/react/20/solid";
 import { Link, useLocation } from "react-router-dom";
+import axios from "axios";
 
 interface Recipe {
   id: string;
@@ -57,7 +58,7 @@ function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
 
-export default function LowCaloriesPage() {
+export const LowCaloriesPage = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,11 +81,8 @@ export default function LowCaloriesPage() {
             ? `${process.env.REACT_APP_API_URL}/api/lowCaloriesRecipes?sort=newest`
             : `${process.env.REACT_APP_API_URL}/api/lowCaloriesRecipes`;
 
-        const res = await fetch(url);
-        if (!res.ok) {
-          throw new Error("Erreur de récupération");
-        }
-        const data: Recipe[] = await res.json();
+        const res = await axios.get(url);
+        const data: Recipe[] = res.data;
         const mapped = data.map((recipe) => ({
           id: recipe.id,
           Name: recipe.Name,
@@ -100,7 +98,7 @@ export default function LowCaloriesPage() {
         setRecipes(mapped);
         setLoading(false);
       } catch (err: any) {
-        setError(err.message);
+        setError(err.response?.data?.message || err.message);
         setLoading(false);
       }
     };
@@ -668,4 +666,4 @@ export default function LowCaloriesPage() {
       </div>
     </div>
   );
-}
+};

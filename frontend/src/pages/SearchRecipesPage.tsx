@@ -8,6 +8,7 @@ import {
   ArrowLongLeftIcon,
   ArrowLongRightIcon,
 } from "@heroicons/react/20/solid";
+import axios from "axios";
 
 interface Recipe {
   id: string;
@@ -21,7 +22,7 @@ interface Recipe {
   Rating?: number;
 }
 
-export default function SearchRecipesPage() {
+export const SearchRecipesPage = () => {
   const [keyword, setKeyword] = useState<string>("");
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -46,22 +47,16 @@ export default function SearchRecipesPage() {
     setRecipes([]);
 
     try {
-      const response = await fetch(
+      const response = await axios.get(
         `${
           process.env.REACT_APP_API_URL
         }/api/searchRecipes?keyword=${encodeURIComponent(term)}`
       );
 
-      if (!response.ok) {
-        throw new Error("Erreur lors de la recherche");
-      }
-
-      const data: Recipe[] = await response.json();
-
-      setRecipes(data);
+      setRecipes(response.data);
       setCurrentPage(1);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message);
     } finally {
       setLoading(false);
     }
@@ -69,37 +64,6 @@ export default function SearchRecipesPage() {
 
   function classNames(...classes: string[]) {
     return classes.filter(Boolean).join(" ");
-  }
-
-  function renderStars(raw: number | string) {
-    const rating = typeof raw === "string" ? parseFloat(raw) : raw;
-    const full = Math.floor(rating);
-    const half = rating - full >= 0.5;
-    const empty = 5 - full - (half ? 1 : 0);
-
-    return (
-      <div className="flex items-center space-x-0.5">
-        {Array(full)
-          .fill(0)
-          .map((_, i) => (
-            <SolidStar key={`full-${i}`} className="h-5 w-5 text-yellow-400" />
-          ))}
-        {half && (
-          <div className="relative h-5 w-5 text-yellow-400">
-            <SolidStar className="absolute inset-0" />
-            <SolidStar
-              className="absolute inset-0 text-gray-200"
-              style={{ clipPath: "inset(0 50% 0 0)" }}
-            />
-          </div>
-        )}
-        {Array(empty)
-          .fill(0)
-          .map((_, i) => (
-            <OutlineStar key={`empty-${i}`} className="h-5 w-5 text-gray-300" />
-          ))}
-      </div>
-    );
   }
 
   const totalPages = Math.ceil(recipes.length / recipesPerPage);
@@ -140,12 +104,15 @@ export default function SearchRecipesPage() {
         </ol>
       </nav>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Résultats pour « {keyword} » :{" "}
-          <span className="text-[#7C3AED]">
-            {recipes.length} résultat {recipes.length > 1 ? "s" : ""}
-          </span>
-        </h1>
+        {!loading && (
+          <h1 className="text-3xl font-bold text-gray-900">
+            Résultats pour « {keyword} » :{" "}
+            <span className="text-[#7C3AED]">
+              {recipes.length} résultat{recipes.length > 1 ? "s" : ""}
+            </span>
+          </h1>
+        )}
+
         {error && <p className="mt-4 text-center text-red-600">{error}</p>}
       </div>
       <div className="bg-gray-50 py-12">
@@ -197,9 +164,7 @@ export default function SearchRecipesPage() {
                       <UsersIcon className="ml-1 h-4 w-4" />
                       &nbsp;{recipe.Servings}
                     </div>
-                    <div className="flex justify-center mb-4">
-                      {renderStars(recipe.Rating || 0)}
-                    </div>
+
                     <h2 className="text-xl font-semibold text-gray-800">
                       {recipe.Name}
                     </h2>
@@ -289,4 +254,4 @@ export default function SearchRecipesPage() {
       )}
     </div>
   );
-}
+};

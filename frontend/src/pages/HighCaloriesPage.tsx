@@ -26,6 +26,7 @@ import {
   ArrowLongRightIcon,
 } from "@heroicons/react/20/solid";
 import { Link, useLocation } from "react-router-dom";
+import axios from "axios";
 
 interface Recipe {
   id: string;
@@ -56,7 +57,7 @@ function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
 
-export default function HighCaloriesPage() {
+export const HighCaloriesPage = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -72,13 +73,10 @@ export default function HighCaloriesPage() {
   const searchQuery = queryParams.get("search")?.toLowerCase() || "";
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_URL}/api/highCaloriesRecipes`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Erreur de récupération");
-        return res.json();
-      })
-      .then((data: Recipe[]) => {
-        const mapped = data.map((recipe) => ({
+    axios
+      .get(`${process.env.REACT_APP_API_URL}/api/highCaloriesRecipes`)
+      .then((response) => {
+        const mapped = response.data.map((recipe: Recipe) => ({
           id: recipe.id,
           Name: recipe.Name,
           Description: recipe.Description || "",
@@ -94,7 +92,7 @@ export default function HighCaloriesPage() {
         setLoading(false);
       })
       .catch((err) => {
-        setError(err.message);
+        setError(err.response?.data?.message || err.message);
         setLoading(false);
       });
   }, []);
@@ -659,4 +657,4 @@ export default function HighCaloriesPage() {
       </div>
     </div>
   );
-}
+};

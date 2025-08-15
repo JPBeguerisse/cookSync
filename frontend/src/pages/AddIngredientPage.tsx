@@ -1,9 +1,11 @@
-'use client'
+"use client";
 
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import axios from "axios";
+import { ingredientToasts } from "../utils/toast";
 
-export default function AddIngredientPage() {
+export const AddIngredientPage = () => {
   const [name, setName] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
@@ -21,26 +23,26 @@ export default function AddIngredientPage() {
     setError(null);
 
     try {
-      const response = await fetch(
+      const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/addIngredient`,
         {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            Name: name.trim(),
-            Description: description.trim(),
-            Recettes: [], // Pas d’association de recettes par défaut
-          }),
+          Name: name.trim(),
+          Description: description.trim(),
+          Recettes: [], // Pas d'association de recettes par défaut
         }
       );
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Erreur à l’ajout");
-      }
+
+      // Afficher le toast de succès
+      ingredientToasts.create();
+
       // Après création, on revient à la liste des ingrédients
       navigate("/ingredients");
     } catch (err: any) {
-      setError(err.message);
+      const errorMessage = err.response?.data?.error || err.message;
+      setError(errorMessage);
+
+      // Afficher le toast d'erreur
+      ingredientToasts.error();
     } finally {
       setLoading(false);
     }
@@ -67,10 +69,18 @@ export default function AddIngredientPage() {
         </ol>
       </nav>
 
-      <h1 className="text-2xl font-bold text-gray-900 mb-4">Ajouter un ingrédient</h1>
-      <form onSubmit={handleSubmit} className="max-w-md space-y-6 rounded-lg border border-gray-200 p-6 shadow-sm">
+      <h1 className="text-2xl font-bold text-gray-900 mb-4">
+        Ajouter un ingrédient
+      </h1>
+      <form
+        onSubmit={handleSubmit}
+        className="max-w-md space-y-6 rounded-lg border border-gray-200 p-6 shadow-sm"
+      >
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-900">
+          <label
+            htmlFor="name"
+            className="block text-sm font-medium text-gray-900"
+          >
             Nom de l’ingrédient
           </label>
           <input
@@ -84,7 +94,10 @@ export default function AddIngredientPage() {
           />
         </div>
         <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-900">
+          <label
+            htmlFor="description"
+            className="block text-sm font-medium text-gray-900"
+          >
             Description
           </label>
           <textarea
@@ -118,4 +131,4 @@ export default function AddIngredientPage() {
       </form>
     </div>
   );
-}
+};

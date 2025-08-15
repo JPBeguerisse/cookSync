@@ -1,15 +1,17 @@
-'use client'
+"use client";
 
 import React, { useState } from "react";
 import axios from "axios";
 import { Tab } from "@headlessui/react";
 import { UsersIcon } from "@heroicons/react/20/solid";
+import { recipeToasts } from "../utils/toast";
 
 export const GenerateRecipePage: React.FC = () => {
   const [ingredients, setIngredients] = useState<string>("");
   const [servings, setServings] = useState<number>(1);
   const [intolerances, setIntolerances] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [loadingSave, setLoadingSave] = useState(false);
   const [recipe, setRecipe] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,7 +43,7 @@ export const GenerateRecipePage: React.FC = () => {
 
   const handleSave = async () => {
     if (!recipe) return;
-    setLoading(true);
+    setLoadingSave(true);
     setError(null);
 
     try {
@@ -64,11 +66,11 @@ export const GenerateRecipePage: React.FC = () => {
           : recipe.NutritionAnalysis,
         Image: recipe.image || recipe.Image || "",
       });
-      alert("Recette sauvegardée avec succès !");
+      recipeToasts.create();
     } catch (err: any) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      setLoadingSave(false);
     }
   };
 
@@ -95,7 +97,10 @@ export const GenerateRecipePage: React.FC = () => {
 
   return (
     <div className="bg-white">
-      <nav aria-label="breadcrumb" className="mx-auto max-w-7xl px-4 pt-8 text-sm text-gray-600 sm:px-6 lg:px-8">
+      <nav
+        aria-label="breadcrumb"
+        className="mx-auto max-w-7xl px-4 pt-8 text-sm text-gray-600 sm:px-6 lg:px-8"
+      >
         <ol className="flex space-x-2">
           <li>
             <a href="/" className="hover:underline text-gray-700">
@@ -117,39 +122,81 @@ export const GenerateRecipePage: React.FC = () => {
           Générer une recette personnalisée
         </h1>
         <p className="mt-4 text-lg text-gray-600">
-          Indiquez vos ingrédients, le nombre de personnes et vos intolérances pour
-          obtenir une recette créée par notre IA.
+          Indiquez vos ingrédients, le nombre de personnes et vos intolérances
+          pour obtenir une recette créée par notre IA.
         </p>
       </div>
       <section className="mx-auto mt-8 flex flex-col gap-8 px-4 sm:px-6 lg:flex-row-reverse lg:max-w-5xl lg:px-8 py-8 justify-center">
         <div className="lg:w-1/2">
-          <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6 bg-white p-6 rounded-lg shadow"
+          >
             <div>
-              <label htmlFor="ingredients" className="block text-sm font-medium text-gray-900 text-left">
+              <label
+                htmlFor="ingredients"
+                className="block text-sm font-medium text-gray-900 text-left"
+              >
                 Ingrédients (séparés par des virgules)
               </label>
               <div className="mt-2">
-                <input id="ingredients" name="ingredients" type="text" value={ingredients} onChange={(e) => setIngredients(e.target.value)} required className="block w-full rounded-md bg-white px-3.5 py-2 text-base text-gray-900 border outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-[#7C3AED] sm:text-sm" placeholder="Ex. pommes de terre, oignon, ail" />
+                <input
+                  id="ingredients"
+                  name="ingredients"
+                  type="text"
+                  value={ingredients}
+                  onChange={(e) => setIngredients(e.target.value)}
+                  required
+                  className="block w-full rounded-md bg-white px-3.5 py-2 text-base text-gray-900 border outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-[#7C3AED] sm:text-sm"
+                  placeholder="Ex. pommes de terre, oignon, ail"
+                />
               </div>
             </div>
             <div>
-              <label htmlFor="servings" className="block text-sm font-medium text-gray-900 text-left">
+              <label
+                htmlFor="servings"
+                className="block text-sm font-medium text-gray-900 text-left"
+              >
                 Nombre de personnes
               </label>
               <div className="mt-2">
-                <input id="servings" name="servings" type="number" min={1} value={servings} onChange={(e) => setServings(Number(e.target.value))} required className="block w-24 rounded-md bg-white px-3.5 py-2 text-base text-gray-900 border outline-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-[#7C3AED] sm:text-sm" />
+                <input
+                  id="servings"
+                  name="servings"
+                  type="number"
+                  min={1}
+                  value={servings}
+                  onChange={(e) => setServings(Number(e.target.value))}
+                  required
+                  className="block w-24 rounded-md bg-white px-3.5 py-2 text-base text-gray-900 border outline-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-[#7C3AED] sm:text-sm"
+                />
               </div>
             </div>
             <div>
-              <label htmlFor="intolerances" className="block text-sm font-medium text-gray-900 text-left">
+              <label
+                htmlFor="intolerances"
+                className="block text-sm font-medium text-gray-900 text-left"
+              >
                 Intolérances (séparées par des virgules)
               </label>
               <div className="mt-2">
-                <input id="intolerances" name="intolerances" type="text" value={intolerances} onChange={(e) => setIntolerances(e.target.value)} className="block w-full rounded-md bg-white px-3.5 py-2 text-base text-gray-900 border outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-[#7C3AED] sm:text-sm" placeholder="Ex. gluten, lactose" />
+                <input
+                  id="intolerances"
+                  name="intolerances"
+                  type="text"
+                  value={intolerances}
+                  onChange={(e) => setIntolerances(e.target.value)}
+                  className="block w-full rounded-md bg-white px-3.5 py-2 text-base text-gray-900 border outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-[#7C3AED] sm:text-sm"
+                  placeholder="Ex. gluten, lactose"
+                />
               </div>
             </div>
             <div className="pt-4">
-              <button type="submit" disabled={loading} className="w-full rounded-md bg-[#7C3AED] px-4 py-2 text-center text-sm font-semibold text-white shadow hover:bg-purple-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7C3AED]">
+              <button
+                type="submit"
+                disabled={loading}
+                className="cursor-pointer w-full rounded-md bg-[#7C3AED] px-4 py-2 text-center text-sm font-semibold text-white shadow hover:bg-purple-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7C3AED]"
+              >
                 {loading ? "Génération en cours…" : "Générer la recette"}
               </button>
             </div>
@@ -164,22 +211,34 @@ export const GenerateRecipePage: React.FC = () => {
           <div className="lg:w-1/2">
             <div className="bg-gray-50 p-6 rounded-lg shadow">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">{recipe.title || recipe.Name}</h2>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {recipe.title || recipe.Name}
+                </h2>
                 {(recipe.type || recipe.Type) && (
                   <span className="inline-flex items-center rounded-md bg-purple-100 px-2 py-1 text-xs font-medium text-[#7C3AED] uppercase">
-                    {recipe.type || recipe.Type} <UsersIcon className="ml-1 h-4 w-4" />&nbsp;{recipe.servings || recipe.Servings} 
+                    {recipe.type || recipe.Type}{" "}
+                    <UsersIcon className="ml-1 h-4 w-4" />
+                    &nbsp;{recipe.servings || recipe.Servings}
                   </span>
                 )}
               </div>
               {recipe.image && (
                 <div className="mt-6 flex justify-center">
-                  <img src={recipe.image} alt={recipe.title || recipe.Name} className="rounded-lg object-cover shadow-lg w-full max-w-md" />
+                  <img
+                    src={recipe.image}
+                    alt={recipe.title || recipe.Name}
+                    className="rounded-lg object-cover shadow-lg w-full max-w-md"
+                  />
                 </div>
               )}
               {recipe.description && (
                 <div className="mt-6">
-                  <h3 className="text-lg font-medium text-gray-900 text-left">Description</h3>
-                  <p className="mt-2 text-gray-700 text-left">{recipe.description || recipe.Description}</p>
+                  <h3 className="text-lg font-medium text-gray-900 text-left">
+                    Description
+                  </h3>
+                  <p className="mt-2 text-gray-700 text-left">
+                    {recipe.description || recipe.Description}
+                  </p>
                 </div>
               )}
               {nutrition && (
@@ -191,7 +250,8 @@ export const GenerateRecipePage: React.FC = () => {
                     <ul className="mt-2 list-disc list-inside text-gray-700 text-left">
                       {Object.entries(nutrition).map(([key, value]) => (
                         <li key={key}>
-                          <span className="capitalize">{key} :</span> {String(value)}
+                          <span className="capitalize">{key} :</span>{" "}
+                          {String(value)}
                         </li>
                       ))}
                     </ul>
@@ -204,7 +264,14 @@ export const GenerateRecipePage: React.FC = () => {
                 <Tab.Group>
                   <Tab.List className="flex space-x-1 border-b">
                     {["Ingrédients", "Instructions"].map((tabName) => (
-                      <Tab key={tabName} className={({ selected }) => selected ? "px-3 py-1 text-sm font-medium border-b-2 border-[#7C3AED] text-[#7C3AED]" : "px-3 py-1 text-sm font-medium text-gray-500 hover:text-gray-700"}>
+                      <Tab
+                        key={tabName}
+                        className={({ selected }) =>
+                          selected
+                            ? "px-3 py-1 text-sm font-medium border-b-2 border-[#7C3AED] text-[#7C3AED]"
+                            : "px-3 py-1 text-sm font-medium text-gray-500 hover:text-gray-700"
+                        }
+                      >
                         {tabName}
                       </Tab>
                     ))}
@@ -218,7 +285,9 @@ export const GenerateRecipePage: React.FC = () => {
                           ))}
                         </ul>
                       ) : (
-                        <p className="text-gray-500">Aucun ingrédient fourni.</p>
+                        <p className="text-gray-500">
+                          Aucun ingrédient fourni.
+                        </p>
                       )}
                     </Tab.Panel>
                     <Tab.Panel>
@@ -229,15 +298,23 @@ export const GenerateRecipePage: React.FC = () => {
                           ))}
                         </ol>
                       ) : (
-                        <p className="text-gray-500">Aucune instruction disponible.</p>
+                        <p className="text-gray-500">
+                          Aucune instruction disponible.
+                        </p>
                       )}
                     </Tab.Panel>
                   </Tab.Panels>
                 </Tab.Group>
               </div>
               <div className="mt-6 flex justify-center">
-                <button onClick={handleSave} disabled={loading} className="rounded-md bg-[#7C3AED] px-6 py-2 text-sm font-semibold text-white shadow hover:bg-purple-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7C3AED]">
-                  Sauvegarder la recette
+                <button
+                  onClick={handleSave}
+                  disabled={loadingSave}
+                  className="cursor-pointer rounded-md bg-[#7C3AED] px-6 py-2 text-sm font-semibold text-white shadow hover:bg-purple-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7C3AED]"
+                >
+                  {loadingSave
+                    ? "Sauvegarde en cours…"
+                    : "Sauvegarder la recette"}
                 </button>
               </div>
             </div>

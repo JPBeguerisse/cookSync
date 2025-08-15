@@ -1,15 +1,15 @@
 import { Routes, Route } from "react-router-dom";
 import { GenerateRecipePage } from "../pages/GenerateRecipePage";
-import RecipesPage from "../pages/RecipesPage";
-import HomePage from "../pages/HomePage";
-import RecipeDetail from "../pages/RecipeDetail";
-import ContactPage from "../pages/ContactPage";
-import AboutPage from "../pages/AboutPage";
-import PrivacyPolicyPage from "../pages/PrivacyPolicyPage";
-import SearchRecipesPage from "../pages/SearchRecipesPage";
-import LowCaloriesPage from "../pages/LowCaloriesPage";
-import HighCaloriesPage from "../pages/HighCaloriesPage";
-import ContactSuccessPage from "../pages/ContactSuccessPage";
+import { RecipesPage } from "../pages/RecipesPage";
+import { HomePage } from "../pages/HomePage";
+import { RecipeDetail } from "../pages/RecipeDetail";
+import { ContactPage } from "../pages/ContactPage";
+import { AboutPage } from "../pages/AboutPage";
+import { PrivacyPolicyPage } from "../pages/PrivacyPolicyPage";
+import { SearchRecipesPage } from "../pages/SearchRecipesPage";
+import { LowCaloriesPage } from "../pages/LowCaloriesPage";
+import { HighCaloriesPage } from "../pages/HighCaloriesPage";
+import { ContactSuccessPage } from "../pages/ContactSuccessPage";
 
 const AppRoutes = () => {
   return (

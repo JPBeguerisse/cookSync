@@ -5,6 +5,7 @@ import { useParams, Link } from "react-router-dom";
 import { ArrowLeftIcon, StarIcon, UsersIcon } from "@heroicons/react/20/solid";
 import { Tab } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import axios from "axios";
 
 interface Recipe {
   id: string;
@@ -20,7 +21,7 @@ interface Recipe {
   Rating?: number;
 }
 
-function RecipeSkeleton({ error }: { error?: string }) {
+export const RecipeSkeleton = ({ error }: { error?: string }) => {
   return (
     <div className="bg-white">
       <div className="mx-auto mt-0 lg:mt-8 max-w-2xl px-4 sm:px-6 lg:max-w-7xl lg:px-8 flex justify-end">
@@ -106,78 +107,36 @@ function RecipeSkeleton({ error }: { error?: string }) {
       </div>
     </div>
   );
-}
+};
 
-export default function RecipeDetail() {
+export const RecipeDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!id) {
-      setError("ID de recette manquant");
-      setLoading(false);
-      return;
-    }
-
-    fetch(`${process.env.REACT_APP_API_URL}/api/recipe/${id}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Recette introuvable");
-        return res.json();
-      })
-      .then((data: Recipe) => {
-        setRecipe(data);
+    const getRecipe = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.REACT_APP_API_URL}/api/recipe/${id}`
+        );
+        setRecipe(response.data);
         setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
+      } catch (error: any) {
+        setError(
+          error.response?.data?.message ||
+            error.message ||
+            "Erreur de récupération"
+        );
         setLoading(false);
-      });
+      }
+    };
+    getRecipe();
   }, [id]);
 
   function classNames(...classes: string[]) {
     return classes.filter(Boolean).join(" ");
-  }
-
-  function renderStars(raw: number | string | undefined) {
-    if (raw == null) {
-      return null;
-    }
-
-    const rating = typeof raw === "string" ? parseFloat(raw) : raw;
-
-    if (isNaN(rating)) {
-      return null;
-    }
-
-    const full = Math.floor(rating);
-    const half = rating - full >= 0.5;
-    const empty = 5 - full - (half ? 1 : 0);
-
-    return (
-      <div className="flex items-center space-x-0.5">
-        {Array(full)
-          .fill(0)
-          .map((_, i) => (
-            <StarIcon key={`full-${i}`} className="h-5 w-5 text-yellow-400" />
-          ))}
-        {half && (
-          <div className="relative h-5 w-5 text-yellow-400">
-            <StarIcon className="absolute inset-0" />
-            <StarIcon
-              className="absolute inset-0 text-gray-200"
-              style={{ clipPath: "inset(0 50% 0 0)" }}
-            />
-          </div>
-        )}
-        {Array(empty)
-          .fill(0)
-          .map((_, i) => (
-            <StarIcon key={`empty-${i}`} className="h-5 w-5 text-gray-200" />
-          ))}
-      </div>
-    );
   }
 
   if (loading) {
@@ -216,6 +175,7 @@ export default function RecipeDetail() {
     }
   }
 
+  // récupération des ingrédients et des instructions
   const ingredientsList = recipe.Ingredients.split(/,\s*/)
     .map((i) => i.trim())
     .filter((i) => i);
@@ -259,8 +219,8 @@ export default function RecipeDetail() {
           <div className="flex flex-col lg:flex-row gap-8">
             <div className="lg:mt-0 w-full lg:w-1/2">
               <h2 className="sr-only">Images</h2>
-              <div className="flex lg:gap-8 h-full">
-                <div className="h-64 lg:h-full w-full">
+              <div className="flex lg:gap-8 h-64 lg:h-[600px]">
+                <div className="h-64 lg:h-[600px] w-full">
                   {Array.isArray(recipe.Image) ? (
                     recipe.Image.map((imgObj, idx) => (
                       <img
@@ -268,10 +228,8 @@ export default function RecipeDetail() {
                         src={imgObj.url}
                         alt={recipe.Name}
                         className={classNames(
-                          idx === 0
-                            ? "lg:col-span-2 lg:row-span-2"
-                            : "hidden lg:block",
-                          "rounded-lg object-cover"
+                          idx === 0 ? "w-full h-full" : "hidden lg:block",
+                          "rounded-lg object-cover aspect-[4/3]"
                         )}
                       />
                     ))
@@ -279,10 +237,10 @@ export default function RecipeDetail() {
                     <img
                       src={recipe.Image as string}
                       alt={recipe.Name}
-                      className="lg:col-span-2 lg:row-span-2 rounded-lg object-cover w-full h-full"
+                      className="rounded-lg object-cover w-full h-full aspect-[4/3]"
                     />
                   ) : (
-                    <div className="lg:col-span-2 lg:row-span-2 rounded-lg bg-gray-200 w-full h-full" />
+                    <div className="rounded-lg bg-gray-200 w-full h-full" />
                   )}
                 </div>
               </div>
@@ -300,12 +258,6 @@ export default function RecipeDetail() {
                         &nbsp;{recipe.Servings}
                       </span>
                     )}
-                  </div>
-                  <div className="mt-4 flex items-center">
-                    {renderStars(recipe.Rating)}
-                    <span className="ml-2 text-sm text-gray-600">
-                      {recipe.Rating && ` (${recipe.Rating} / 5)`}
-                    </span>
                   </div>
                   {recipe.Description && (
                     <div className="mt-6">
@@ -401,4 +353,4 @@ export default function RecipeDetail() {
       </div>
     </div>
   );
-}
+};

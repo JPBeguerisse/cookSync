@@ -17,8 +17,7 @@ import {
   PopoverGroup,
   PopoverPanel,
 } from "@headlessui/react";
-import { StarIcon as SolidStar, UsersIcon } from "@heroicons/react/20/solid";
-import { StarIcon as OutlineStar } from "@heroicons/react/24/outline";
+import { UsersIcon } from "@heroicons/react/20/solid";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import {
@@ -26,6 +25,7 @@ import {
   ArrowLongRightIcon,
 } from "@heroicons/react/20/solid";
 import { Link, useLocation } from "react-router-dom";
+import axios from "axios";
 
 interface Recipe {
   id: string;
@@ -37,7 +37,6 @@ interface Recipe {
   Servings: number | string;
   Type?: string;
   CreatedAt?: string;
-  Rating?: number;
 }
 
 interface FilterOption {
@@ -55,14 +54,13 @@ function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
 
-export default function RecipesPage() {
+export const RecipesPage = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [filterTypes, setFilterTypes] = useState<string[]>([]);
-  const [filterRating, setFilterRating] = useState<number>(0);
-  type SortOption = "bestRating" | "newest" | "";
+  type SortOption = "newest" | "";
   const [sortOption, setSortOption] = useState<SortOption>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const recipesPerPage = 9;
@@ -78,52 +76,21 @@ export default function RecipesPage() {
             ? `${process.env.REACT_APP_API_URL}/api/recipes?sort=newest`
             : `${process.env.REACT_APP_API_URL}/api/recipes`;
 
-        const res = await fetch(url);
-        if (!res.ok) {
-          throw new Error("Erreur de récupération");
-        }
-        const data: Recipe[] = await res.json();
+        const response = await axios.get(url);
+        //console.log(response.data);
+        const data: Recipe[] = await response.data;
         setRecipes(data);
         setLoading(false);
       } catch (err: any) {
-        setError(err.message);
+        setError(
+          err.response?.data?.message || err.message || "Erreur de récupération"
+        );
         setLoading(false);
       }
     };
 
     fetchRecipes();
   }, [sortOption]);
-
-  function renderStars(raw: number | string) {
-    const rating = typeof raw === "string" ? parseFloat(raw) : raw;
-    const full = Math.floor(rating);
-    const half = rating - full >= 0.5;
-    const empty = 5 - full - (half ? 1 : 0);
-
-    return (
-      <div className="flex items-center space-x-0.5">
-        {Array(full)
-          .fill(0)
-          .map((_, i) => (
-            <SolidStar key={`full-${i}`} className="h-5 w-5 text-yellow-400" />
-          ))}
-        {half && (
-          <div className="relative h-5 w-5 text-yellow-400">
-            <SolidStar className="absolute inset-0" />
-            <SolidStar
-              className="absolute inset-0 text-gray-200"
-              style={{ clipPath: "inset(0 50% 0 0)" }}
-            />
-          </div>
-        )}
-        {Array(empty)
-          .fill(0)
-          .map((_, i) => (
-            <OutlineStar key={`empty-${i}`} className="h-5 w-5 text-gray-300" />
-          ))}
-      </div>
-    );
-  }
 
   const allTypes = Array.from(
     new Set(
@@ -143,20 +110,7 @@ export default function RecipesPage() {
     })),
   };
 
-  const ratingSection: FilterSection = {
-    id: "rating",
-    name: "Note minimale",
-    options: [
-      { value: "0", label: "Toutes notes", checked: filterRating === 0 },
-      { value: "1", label: "≥ 1 étoile", checked: filterRating === 1 },
-      { value: "2", label: "≥ 2 étoiles", checked: filterRating === 2 },
-      { value: "3", label: "≥ 3 étoiles", checked: filterRating === 3 },
-      { value: "4", label: "≥ 4 étoiles", checked: filterRating === 4 },
-      { value: "5", label: "5 étoiles", checked: filterRating === 5 },
-    ],
-  };
-
-  const filters: FilterSection[] = [typeSection, ratingSection];
+  const filters: FilterSection[] = [typeSection];
 
   let filtered = recipes.filter((recipe) => {
     if (searchQuery) {
@@ -175,19 +129,10 @@ export default function RecipesPage() {
       filterTypes.length === 0 ||
       (recipe.Type && filterTypes.includes(recipe.Type.toString().trim()));
 
-    const ratingValue = recipe.Rating || 0;
-    const byRating = ratingValue >= filterRating;
-
-    return byType && byRating;
+    return byType;
   });
 
-  if (sortOption === "bestRating") {
-    filtered = filtered.sort((a, b) => {
-      const aVal = a.Rating || 0;
-      const bVal = b.Rating || 0;
-      return bVal - aVal;
-    });
-  } else if (sortOption === "newest") {
+  if (sortOption === "newest") {
     filtered = filtered.sort((a, b) => {
       const aTime = a.CreatedAt ? new Date(a.CreatedAt).getTime() : 0;
       const bTime = b.CreatedAt ? new Date(b.CreatedAt).getTime() : 0;
@@ -210,13 +155,6 @@ export default function RecipesPage() {
   filterTypes.forEach((type) => {
     activeFilterBadges.push({ id: `type__${type}`, label: type });
   });
-
-  if (filterRating > 0) {
-    activeFilterBadges.push({
-      id: `rating__${filterRating}`,
-      label: `≥ ${filterRating} étoile${filterRating > 1 ? "s" : ""}`,
-    });
-  }
 
   const goToPreviousPage = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
@@ -308,9 +246,6 @@ export default function RecipesPage() {
                                     ? [...prev, val]
                                     : prev.filter((x) => x !== val)
                                 );
-                              } else if (section.id === "rating") {
-                                const valNum = parseInt(option.value, 10);
-                                setFilterRating(e.target.checked ? valNum : 0);
                               }
                             }}
                           />
@@ -356,21 +291,6 @@ export default function RecipesPage() {
                 </div>
                 <MenuItems className="absolute left-0 z-10 mt-2 w-40 origin-top-left rounded-md bg-white shadow-2xl ring-1 ring-black/5 focus:outline-none">
                   <div className="py-1">
-                    <MenuItem>
-                      {({ active }) => (
-                        <button
-                          onClick={() => setSortOption("bestRating")}
-                          className={classNames(
-                            active
-                              ? "bg-gray-100 text-gray-900"
-                              : "text-gray-700",
-                            "block w-full px-4 py-2 text-left text-sm"
-                          )}
-                        >
-                          Meilleure note
-                        </button>
-                      )}
-                    </MenuItem>
                     <MenuItem>
                       {({ active }) => (
                         <button
@@ -432,11 +352,6 @@ export default function RecipesPage() {
                                         ? [...prev, val]
                                         : prev.filter((x) => x !== val)
                                     );
-                                  } else if (section.id === "rating") {
-                                    const valNum = parseInt(option.value, 10);
-                                    setFilterRating(
-                                      e.target.checked ? valNum : 0
-                                    );
                                   }
                                 }}
                               />
@@ -483,8 +398,6 @@ export default function RecipesPage() {
                               setFilterTypes((prev) =>
                                 prev.filter((x) => x !== val)
                               );
-                            } else if (badge.id.startsWith("rating__")) {
-                              setFilterRating(0);
                             }
                           }}
                         >
@@ -550,16 +463,13 @@ export default function RecipesPage() {
                         )
                       ) : (
                         <div className="h-48 w-full bg-gray-200 flex items-center justify-center rounded-t-lg">
-                          <span className="text-gray-500">Pas d’image</span>
+                          <span className="text-gray-500">Pas d'image</span>
                         </div>
                       )}
                       <div className="p-6">
                         <div className="flex justify-center items-center mb-4">
                           <UsersIcon className="ml-1 h-4 w-4" />
                           &nbsp;{recipe.Servings}
-                        </div>
-                        <div className="flex justify-center mb-4">
-                          {renderStars(recipe.Rating || 0)}
                         </div>
                         <h2 className="text-xl font-semibold text-gray-800">
                           {recipe.Name}
@@ -649,4 +559,4 @@ export default function RecipesPage() {
       </div>
     </div>
   );
-}
+};

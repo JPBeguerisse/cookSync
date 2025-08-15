@@ -1,3 +1,4 @@
+import axios from "axios";
 import React, { useEffect, useState } from "react";
 
 interface Recipe {
@@ -10,16 +11,30 @@ const RecipeList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // useEffect(() => {
+  //   fetch("/api/recipes")
+  //     .then((res) => {
+  //       if (!res.ok)
+  //         throw new Error("Erreur lors de la récupération des recettes");
+  //       return res.json();
+  //     })
+  //     .then((data) => {
+  //       setRecipes(data);
+  //       setLoading(false);
+  //     })
+  //     .catch((err) => {
+  //       setError(err.message);
+  //       setLoading(false);
+  //     });
+  // }, []);
+
   useEffect(() => {
-    fetch("/api/recipes")
+    axios
+      .get("/api/recipes")
       .then((res) => {
-        if (!res.ok)
-          throw new Error("Erreur lors de la récupération des recettes");
-        return res.json();
-      })
-      .then((data) => {
-        setRecipes(data);
+        setRecipes(res.data);
         setLoading(false);
+        console.log(res.data);
       })
       .catch((err) => {
         setError(err.message);
